@@ -1,12 +1,12 @@
 # coding: utf-8
-Pod::Installer::Xcode::TargetValidator.send(:define_method, :verify_no_static_framework_transitive_dependencies) {}
+
 Pod::Spec.new do |s|
   s.name         = "WeexKdp"
-  s.version      = "0.0.1"
-  s.summary      = "Weex Plugin"
+  s.version      = "0.0.2"
+  s.summary      = "Weex Plugin fir the Kaltura Dynamic Player"
 
   s.description  = <<-DESC
-                   Weexplugin Source Description
+                   Weex Plugin fir the Kaltura Dynamic Player
                    DESC
 
   s.homepage     = "https://github.com/tralves/weex-kdp"
@@ -19,17 +19,18 @@ Pod::Spec.new do |s|
   s.authors      = {
                      "Tiago Alves" =>"tralves@gmail.com"
                    }
+
   s.platform     = :ios
-  s.ios.deployment_target = "9.0"
+  s.ios.deployment_target = "8.0"
   s.frameworks  = 'Foundation', 'AVFoundation'
   s.swift_version = '4.0'
 
-  s.source = { :git => "https://github.com/tralves/weex-kdp.git", :tag => s.version }
+  s.source       = { :git => 'please input the url of your code in github', :tag => 'please input you github tag' }
   s.source_files  = "ios/Sources/*.{h,m,mm}"
 
   s.requires_arc = true
   s.static_framework = true
   s.dependency "WeexPluginLoader"
-  s.dependency "WeexSDK", "0.16.0"
+  s.dependency "WeexSDK", "0.18.0"
   s.dependency "PlayKit"
 end
