@@ -97,7 +97,7 @@
         });
       },
       changeMedia() {
-        this.$refs.kdp.sendNotification('changeMediaEntry', {
+        this.playerConfig = {
           entryId: 'Kaltura Media',
           sources: [
             {
@@ -106,7 +106,17 @@
               mediaFormat: 'hls' // e.g. ".hls"
             }
           ]
-        });
+        };
+        // this.$refs.kdp.sendNotification('changeMediaEntry', {
+        //   entryId: 'Kaltura Media',
+        //   sources: [
+        //     {
+        //       id: "1_vl96wf1o",
+        //       contentUrl: 'https://cdnapisec.kaltura.com/p/2215841/sp/221584100/playManifest/entryId/1_vl96wf1o/format/applehttp/protocol/https/a.m3u8',
+        //       mediaFormat: 'hls' // e.g. ".hls"
+        //     }
+        //   ]
+        // });
       }
 		},
 		created() {

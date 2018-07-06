@@ -92,6 +92,15 @@ WX_EXPORT_METHOD(@selector(seek:))
     return self;
 }
 
+// TODO: TEST THIS!
+- (void)updateAttributes:(NSDictionary *)attributes
+{
+    if (attributes[@"playerConfig"]) {
+        self.playerConfig = [attributes objectForKey:@"playerConfig"];
+        [self preparePlayer];
+    }
+}
+
 - (void)initializeEventCallbackDictionary
 {
     self.eventCallbacks = [NSMutableDictionary dictionary];
