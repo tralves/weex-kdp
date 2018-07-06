@@ -250,7 +250,8 @@ WX_EXPORT_METHOD(@selector(seek:))
     NSMutableArray<PKMediaSource*>* sources = [[NSMutableArray alloc] initWithCapacity:[configSources count]];
     for (configSource in configSources) {
         NSURL *contentURL = [[NSURL alloc] initWithString:[configSource objectForKey:@"contentUrl"]];
-        PKMediaSource* source = [[PKMediaSource alloc] init:entryId contentUrl:contentURL mimeType:nil drmData:nil mediaFormat:MediaFormatHls];
+        NSString *sourceId = [playerConfig objectForKey:@"id"];
+        PKMediaSource* source = [[PKMediaSource alloc] init:sourceId contentUrl:contentURL mimeType:nil drmData:nil mediaFormat:MediaFormatHls];
         [sources addObject:source];
     }
 

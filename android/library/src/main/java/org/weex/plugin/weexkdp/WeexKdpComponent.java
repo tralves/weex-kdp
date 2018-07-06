@@ -5,8 +5,12 @@ import android.content.Context;
 import android.graphics.Color;
 import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
+import android.util.Log;
 import android.view.View;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONException;
+import com.alibaba.fastjson.JSONObject;
 import com.alibaba.weex.plugin.annotation.WeexComponent;
 import com.kaltura.playkit.PKMediaConfig;
 import com.kaltura.playkit.PKMediaEntry;
@@ -17,10 +21,13 @@ import com.kaltura.playkit.Player;
 import com.taobao.weex.WXSDKInstance;
 import com.taobao.weex.dom.WXDomObject;
 import com.taobao.weex.ui.component.WXComponent;
+import com.taobao.weex.ui.component.WXComponentProp;
 import com.taobao.weex.ui.component.WXVContainer;
+
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * TODO: Auto-generated component example
@@ -28,6 +35,8 @@ import java.util.List;
 
 @WeexComponent(names = {"weexKdp"})
 public class WeexKdpComponent extends WXComponent<View> {
+
+    private static final String TAG = "WeexKdpComponent";
 
     //The url of the source to play
     private static final String SOURCE_URL = "https://cdnapisec.kaltura.com/p/2215841/sp/221584100/playManifest/entryId/1_w9zx2eti/protocol/https/format/applehttp/falvorIds/1_1obpcggb,1_yyuvftfz,1_1xdbzoa6,1_k16ccgto,1_djdf6bk8/a.m3u8";
@@ -46,30 +55,31 @@ public class WeexKdpComponent extends WXComponent<View> {
     protected View initComponentHostView(@NonNull Context context) {
         player = PlayKitManager.loadPlayer(context, null);
 
-        createMediaConfig();
+        return player.getView();
+    }
+
+    @WXComponentProp(name = "playerConfig")
+    public void setPlayerConfig(Map playerConfig) {
+        Log.d(TAG, playerConfig.toString());
+
+        createMediaConfig(playerConfig);
         player.prepare(mediaConfig);
 
         player.play();
 
-        return player.getView();
     }
 
     /**
      * Will create {@link } object.
      */
-    private void createMediaConfig() {
+    private void createMediaConfig(Map playerConfig) {
         //First. Create PKMediaConfig object.
         mediaConfig = new PKMediaConfig();
 
         //Set start position of the media. This will
         //automatically start playback from specified position.
-        mediaConfig.setStartPosition(0);
-
-        //Second. Create PKMediaEntry object.
-        PKMediaEntry mediaEntry = createMediaEntry();
-
-        //Add it to the mediaConfig.
-        mediaConfig.setMediaEntry(mediaEntry);
+        mediaConfig.setStartPosition(0)
+                .setMediaEntry(createMediaEntry(playerConfig));
     }
 
     /**
@@ -77,12 +87,12 @@ public class WeexKdpComponent extends WXComponent<View> {
      *
      * @return - the {@link PKMediaEntry} object.
      */
-    private PKMediaEntry createMediaEntry() {
+    private PKMediaEntry createMediaEntry(Map playerConfig) {
         //Create media entry.
         PKMediaEntry mediaEntry = new PKMediaEntry();
 
         //Set id for the entry.
-        mediaEntry.setId(ENTRY_ID);
+        mediaEntry.setId((String) playerConfig.get("entryId"));
 
         //Set media entry type. It could be Live,Vod or Unknown.
         //In this sample we use Vod.
@@ -94,7 +104,7 @@ public class WeexKdpComponent extends WXComponent<View> {
         //For example same entry can contain PKMediaSource with dash and another
         // PKMediaSource can be with hls. The player will decide by itself which source is
         // preferred for playback.
-        List<PKMediaSource> mediaSources = createMediaSources();
+        List<PKMediaSource> mediaSources = createMediaSources((JSONArray) playerConfig.get("sources"));
 
         //Set media sources to the entry.
         mediaEntry.setSources(mediaSources);
@@ -107,24 +117,30 @@ public class WeexKdpComponent extends WXComponent<View> {
      *
      * @return - the list of sources.
      */
-    private List<PKMediaSource> createMediaSources() {
+    private List<PKMediaSource> createMediaSources(JSONArray sources) {
         //Init list which will hold the PKMediaSources.
         List<PKMediaSource> mediaSources = new ArrayList<>();
 
-        //Create new PKMediaSource instance.
-        PKMediaSource mediaSource = new PKMediaSource();
 
-        //Set the id.
-        mediaSource.setId(MEDIA_SOURCE_ID);
+        for (Object object : sources) {
+            try {
+                JSONObject jsonObject = (JSONObject) object;
+                //Create new PKMediaSource instance.
+                PKMediaSource mediaSource = new PKMediaSource();
 
-        //Set the content url. In our case it will be link to hls source(.m3u8).
-        mediaSource.setUrl(SOURCE_URL);
+                //Set the id.
+                mediaSource
+                        .setId(jsonObject.getString("id"))
+                        .setUrl(jsonObject.getString("contentUrl"))
+                        .setMediaFormat(PKMediaFormat.hls);
 
-        //Set the format of the source. In our case it will be hls in case of mpd/wvm formats you have to to call mediaSource.setDrmData method as well
-        mediaSource.setMediaFormat(PKMediaFormat.hls);
-
-        //Add media source to the list.
-        mediaSources.add(mediaSource);
+                //Add media source to the list.
+                mediaSources.add(mediaSource);
+            } catch (JSONException e) {
+                Log.d(TAG, "Could not parse media entry:" + e.getMessage());
+                continue;
+            }
+        }
 
         return mediaSources;
     }

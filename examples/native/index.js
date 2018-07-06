@@ -194,6 +194,7 @@ module.exports = {
     playerConfig: {
       entryId: 'sintel',
       sources: [{
+        id: "1_w9zx2eti",
         contentUrl: 'https://cdnapisec.kaltura.com/p/2215841/playManifest/entryId/1_w9zx2eti/format/applehttp/protocol/https/a.m3u8',
         mediaFormat: 'hls' // e.g. ".hls"
       }]
@@ -247,6 +248,7 @@ module.exports = {
       this.$refs.kdp.sendNotification('changeMediaEntry', {
         entryId: 'Kaltura Media',
         sources: [{
+          id: "1_vl96wf1o",
           contentUrl: 'https://cdnapisec.kaltura.com/p/2215841/sp/221584100/playManifest/entryId/1_vl96wf1o/format/applehttp/protocol/https/a.m3u8',
           mediaFormat: 'hls' // e.g. ".hls"
         }]
