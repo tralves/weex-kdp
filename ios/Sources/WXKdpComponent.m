@@ -191,7 +191,7 @@ WX_EXPORT_METHOD(@selector(seek:))
 
     [self.eventCallbacks setObject: callback forKey: event];
 
-    if ([event isEqualToString:@"time"]) {
+    if ([event isEqualToString:@"timeChange"]) {
         [self trackTime:callback];
     }
     else if ([event isEqualToString:@"stateChange"]) {

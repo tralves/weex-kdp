@@ -18,7 +18,11 @@ import com.kaltura.playkit.PKMediaFormat;
 import com.kaltura.playkit.PKMediaSource;
 import com.kaltura.playkit.PlayKitManager;
 import com.kaltura.playkit.Player;
+import com.kaltura.playkit.PlayerState;
+import com.kaltura.playkit.utils.Consts;
 import com.taobao.weex.WXSDKInstance;
+import com.taobao.weex.annotation.JSMethod;
+import com.taobao.weex.bridge.JSCallback;
 import com.taobao.weex.dom.WXDomObject;
 import com.taobao.weex.ui.component.WXComponent;
 import com.taobao.weex.ui.component.WXComponentProp;
@@ -26,8 +30,11 @@ import com.taobao.weex.ui.component.WXVContainer;
 
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * TODO: Auto-generated component example
@@ -45,7 +52,18 @@ public class WeexKdpComponent extends WXComponent<View> {
     private static final String MEDIA_SOURCE_ID = "source_id";
 
     private Player player;
+    private PlayerState playerState;
+
     private PKMediaConfig mediaConfig;
+
+    private HashMap<String, JSCallback> eventCallbacks = new HashMap<>();
+
+    private Runnable updateProgressAction = new Runnable() {
+        @Override
+        public void run() {
+            updateProgress();
+        }
+    };
 
     public WeexKdpComponent(WXSDKInstance instance, WXDomObject dom, WXVContainer parent) {
         super(instance, dom, parent);
@@ -68,6 +86,78 @@ public class WeexKdpComponent extends WXComponent<View> {
         player.play();
 
     }
+
+    @JSMethod
+    public void sendNotification(String action, Object data) {
+        Log.d(TAG, action + ": " + (data != null ? data.toString() : ""));
+
+        switch (action) {
+            case "doPlay": play(); break;
+            case "doPause": pause(); break;
+            case "doSeek": doSeek(data != null ? (Integer) data : 0);
+        }
+    }
+
+    @JSMethod
+    public void getProperty(String property, JSCallback callback) {
+        Log.d(TAG, "get " + property);
+
+        switch (property) {
+            case "duration":    callback.invoke(getDuration()); break;
+            case "time":        callback.invoke(getTime());     break;
+
+        }
+        callback.invoke(0);
+    }
+
+    @JSMethod
+    public void kBind(String event, JSCallback callback) {
+        eventCallbacks.put(event, callback);
+
+        switch (event) {
+            case "timeChange":
+
+        }
+    }
+
+    private void updateProgress() {
+        long duration = Consts.TIME_UNSET;
+        long position = Consts.POSITION_UNSET;
+        long bufferedPosition = 0;
+        if (player != null) {
+            duration = player.getDuration();
+            position = player.getCurrentPosition();
+            bufferedPosition = player.getBufferedPosition();
+        }
+
+//        removeCallbacks(updateProgressAction);
+//        // Schedule an update if necessary.
+//        if (playerState != PlayerState.IDLE /*|| (player.getController(AdEnabledPlayerController.class)  != null && player.getController(AdEnabledPlayerController.class) .getAdCurrentPosition() >= 0)*/) {
+//            long delayMs = 500;
+//            postDelayed(updateProgressAction, delayMs);
+//        }
+    }
+
+    private void play() {
+        player.play();
+    }
+
+    private void pause() {
+        player.pause();
+    }
+
+    private void doSeek(long position) {
+        player.seekTo(position);
+    }
+
+    private long getDuration() {
+        return player.getDuration();
+    }
+
+    private long getTime() {
+        return player.getCurrentPosition();
+    }
+
 
     /**
      * Will create {@link } object.

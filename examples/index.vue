@@ -74,7 +74,7 @@
         this.$refs.kdp.getProperty('duration', duration => {
           this.duration = duration;
         });
-        this.$refs.kdp.kBind('time', (currentTime) => {
+        this.$refs.kdp.kBind('timeChange', (currentTime) => {
           this.currentTime = currentTime;
         });
         this.$refs.kdp.kBind('stateChange', (state) => {

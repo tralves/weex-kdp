@@ -222,7 +222,7 @@ module.exports = {
       this.$refs.kdp.getProperty('duration', function (duration) {
         _this.duration = duration;
       });
-      this.$refs.kdp.kBind('time', function (currentTime) {
+      this.$refs.kdp.kBind('timeChange', function (currentTime) {
         _this.currentTime = currentTime;
       });
       this.$refs.kdp.kBind('stateChange', function (state) {
