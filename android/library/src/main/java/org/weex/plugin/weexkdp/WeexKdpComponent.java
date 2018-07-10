@@ -3,6 +3,7 @@ package org.weex.plugin.weexkdp;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.os.Handler;
 import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 import android.util.Log;
@@ -12,12 +13,14 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.weex.plugin.annotation.WeexComponent;
+import com.kaltura.playkit.PKEvent;
 import com.kaltura.playkit.PKMediaConfig;
 import com.kaltura.playkit.PKMediaEntry;
 import com.kaltura.playkit.PKMediaFormat;
 import com.kaltura.playkit.PKMediaSource;
 import com.kaltura.playkit.PlayKitManager;
 import com.kaltura.playkit.Player;
+import com.kaltura.playkit.PlayerEvent;
 import com.kaltura.playkit.PlayerState;
 import com.kaltura.playkit.utils.Consts;
 import com.taobao.weex.WXSDKInstance;
@@ -29,6 +32,8 @@ import com.taobao.weex.ui.component.WXComponentProp;
 import com.taobao.weex.ui.component.WXVContainer;
 
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -58,13 +63,6 @@ public class WeexKdpComponent extends WXComponent<View> {
 
     private HashMap<String, JSCallback> eventCallbacks = new HashMap<>();
 
-    private Runnable updateProgressAction = new Runnable() {
-        @Override
-        public void run() {
-            updateProgress();
-        }
-    };
-
     public WeexKdpComponent(WXSDKInstance instance, WXDomObject dom, WXVContainer parent) {
         super(instance, dom, parent);
     }
@@ -83,8 +81,7 @@ public class WeexKdpComponent extends WXComponent<View> {
         createMediaConfig(playerConfig);
         player.prepare(mediaConfig);
 
-        player.play();
-
+        addPlayerListeners();
     }
 
     @JSMethod
@@ -94,7 +91,8 @@ public class WeexKdpComponent extends WXComponent<View> {
         switch (action) {
             case "doPlay": play(); break;
             case "doPause": pause(); break;
-            case "doSeek": doSeek(data != null ? (Integer) data : 0);
+            case "doSeek": doSeek(data != null ? ((BigDecimal) data).intValue() : 0); break;
+            case "changeMediaEntry": setPlayerConfig((Map) data); break;
         }
     }
 
@@ -113,29 +111,47 @@ public class WeexKdpComponent extends WXComponent<View> {
     @JSMethod
     public void kBind(String event, JSCallback callback) {
         eventCallbacks.put(event, callback);
+    }
 
-        switch (event) {
-            case "timeChange":
-
-        }
+    @JSMethod
+    public void kUnbind(String event) {
+        eventCallbacks.remove(event);
     }
 
     private void updateProgress() {
+        Log.d(TAG, "updateProgress");
         long duration = Consts.TIME_UNSET;
         long position = Consts.POSITION_UNSET;
         long bufferedPosition = 0;
+
         if (player != null) {
             duration = player.getDuration();
             position = player.getCurrentPosition();
             bufferedPosition = player.getBufferedPosition();
         }
 
-//        removeCallbacks(updateProgressAction);
+        updatePlayerTime(position);
+
+//        timeHandler.removeCallbacks(updateProgressAction);
 //        // Schedule an update if necessary.
 //        if (playerState != PlayerState.IDLE /*|| (player.getController(AdEnabledPlayerController.class)  != null && player.getController(AdEnabledPlayerController.class) .getAdCurrentPosition() >= 0)*/) {
 //            long delayMs = 500;
-//            postDelayed(updateProgressAction, delayMs);
+//            timeHandler.postDelayed(updateProgressAction, delayMs);
 //        }
+    }
+
+    private void updatePlayerTime(long position) {
+        JSCallback stateCallback = eventCallbacks.get("timeChange");
+        if (stateCallback != null) {
+            stateCallback.invokeAndKeepAlive((float) position / 1000);
+        }
+    }
+
+    private void updatePlayerState(String playerState) {
+        JSCallback stateCallback = eventCallbacks.get("stateChange");
+        if (stateCallback != null) {
+            stateCallback.invokeAndKeepAlive(playerState.toLowerCase());
+        }
     }
 
     private void play() {
@@ -146,16 +162,78 @@ public class WeexKdpComponent extends WXComponent<View> {
         player.pause();
     }
 
-    private void doSeek(long position) {
-        player.seekTo(position);
+    private void doSeek(float time) {
+        player.seekTo((long) (time * 1000));
     }
 
-    private long getDuration() {
-        return player.getDuration();
+    private void changeMediaEntry(Map mediaEntry) {
+
+    }
+
+    private float getDuration() {
+        return (float) player.getDuration()/1000;
     }
 
     private long getTime() {
         return player.getCurrentPosition();
+    }
+
+
+    private void addPlayerListeners() {
+
+        player.addEventListener(new PKEvent.Listener() {
+            @Override
+            public void onEvent(PKEvent event) {
+                updatePlayerState("playing");
+            }
+        }, PlayerEvent.Type.PLAY);
+
+        player.addEventListener(new PKEvent.Listener() {
+            @Override
+            public void onEvent(PKEvent event) {
+                updatePlayerState("playing");
+            }
+        }, PlayerEvent.Type.PLAYING);
+
+
+        player.addEventListener(new PKEvent.Listener() {
+            @Override
+            public void onEvent(PKEvent event) {
+                updatePlayerState("paused");
+            }
+        }, PlayerEvent.Type.PAUSE);
+
+
+        player.addStateChangeListener(new PKEvent.Listener() {
+            @Override
+            public void onEvent(PKEvent event) {
+                if (event instanceof PlayerEvent.StateChanged) {
+                    PlayerEvent.StateChanged stateChanged = (PlayerEvent.StateChanged) event;
+                    Log.d(TAG, "State changed from " + stateChanged.oldState + " to " + stateChanged.newState);
+                    playerState = stateChanged.newState;
+                    updatePlayerState(stateChanged.newState.toString());
+                }
+            }
+        });
+//        player.addEventListener(new PKEvent.Listener() {
+//            @Override
+//            public void onEvent(PKEvent event) {
+//                //When the track data available, this event occurs. It brings the info object with it.
+//                PlayerEvent.TracksAvailable tracksAvailable = (PlayerEvent.TracksAvailable) event;
+//                populateSpinnersWithTrackInfo(tracksAvailable.tracksInfo);
+//
+//            }
+//        }, PlayerEvent.Type.TRACKS_AVAILABLE);
+
+        player.addEventListener(new PKEvent.Listener() {
+            @Override
+            public void onEvent(PKEvent event) {
+                //When the track data available, this event occurs. It brings the info object with it.
+                PlayerEvent.PlayheadUpdated playheadUpdated = (PlayerEvent.PlayheadUpdated) event;
+                Log.d(TAG,"playheadUpdated event  position = " + playheadUpdated.position + " duration = " + playheadUpdated.duration);
+                updatePlayerTime(playheadUpdated.position);
+            }
+        }, PlayerEvent.Type.PLAYHEAD_UPDATED);
     }
 
 

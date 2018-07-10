@@ -45,11 +45,11 @@ this.$refs.kdp.sendNotification("doSeek", 30);
 
 ### Available Notifications
 
-#### `changeMediaEntry` *(ios)*
+#### `changeMediaEntry` *(iOS, Android)*
 Prepare for playing an entry. Play when it’s ready.
 - (JSON) `MediaEntry`: see [Data: MediaEntry](#mediaentry).
 ```js
-this.$refs.kdp.sendNotification('prepare', { /* media entry */});
+this.$refs.kdp.sendNotification('changeMediaEntry', { /* media entry */});
 ```
 
 #### `doPlay` *(iOS, Android)*
@@ -162,7 +162,7 @@ this.$refs.kdp.kUnbind('timeChange');
 
 ### Event List
 
-#### `timeChange` *(iOS)*
+#### `timeChange` *(iOS, Android)*
 Updates the callback each 500ms with the current time of the video.
 - `callback`: `fn(currentTime)` callback returning the current time of the video.
   - (float) `currentTime`
@@ -172,7 +172,7 @@ this.$refs.kdp.kBind('timeChange', (currentTime) => {
 })
 ```
 
-#### `stateChange` *(iOS)*
+#### `stateChange` *(iOS, Android)*
 Dispatched when media player's state has changed.
 - `callback`: `fn(playerState)`
   - (string) `playerState`: MediaPlayerState: `uninitialized` / `loading` / `ready` / `playing` / `paused` / `buffering` / `playbackError`

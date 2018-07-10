@@ -226,8 +226,8 @@ module.exports = {
         _this.currentTime = currentTime;
       });
       this.$refs.kdp.kBind('stateChange', function (state) {
-        _this.state = state;
         console.log('state: ', state);
+        _this.state = state;
       });
     },
     pause: function pause() {
